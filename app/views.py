@@ -4,9 +4,15 @@ Jinja2 Documentation:    https://jinja.palletsprojects.com/
 Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
+from flask import Flask,render_template, request, jsonify, send_file
+from flask_wtf.csrf import generate_csrf
+from werkzeug.utils import secure_filename
+import os
+from forms import MovieForm
+from models import Movie
 
-from app import app
-from flask import render_template, request, jsonify, send_file
+from app import app,db
+ 
 import os
 
 
@@ -61,3 +67,39 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+
+@app.route('/api/v1/movies', methods=['POST'])
+def movies():
+    if request.method == 'POST':
+        form = MovieForm()
+        if form.validate_on_submit():
+            title = form.title.data
+            description = form.description.data
+            poster = request.files['poster']
+
+            filename = secure_filename(poster.filename)
+            poster_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            poster.save(poster_path)
+
+            new_movie = Movie(title=title, description=description, poster=filename)
+
+            db.session.add(new_movie)
+            db.session.commit()
+
+            response = {
+                'message': 'Movie successfully added',
+                'title': new_movie.title,
+                'poster': new_movie.poster,
+                'description': new_movie.description
+            }
+            return jsonify(response), 201
+        else:
+            errors = form_errors(form)
+            return jsonify({'errors': errors}), 400
+
+@app.route('/api/v1/csrf-token', methods=['GET']) 
+def get_csrf(): 
+    return jsonify({'csrf_token': generate_csrf()}) 
+
+
+app.run(debug=True)
