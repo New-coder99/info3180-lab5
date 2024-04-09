@@ -23,8 +23,11 @@
               <RouterLink class="nav-link" to="/about">About</RouterLink>
             </li>
             <li>
-              <Router-link class="nav-link" to="/movies/create">Add Movie</router-link>
+              <Router-link class="nav-link" to="/AddMovie">Add Movie</router-link>
             </li>
+            <li>
+            <Router-link class="nav-link" to="/movies">Movies</router-link>
+            </li> 
           </ul>
         </div>
       </div>

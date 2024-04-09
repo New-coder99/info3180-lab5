@@ -4,7 +4,7 @@ Jinja2 Documentation:    https://jinja.palletsprojects.com/
 Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
-from flask import Flask,render_template, request, jsonify, send_file
+from flask import Flask,render_template, request, jsonify, send_file, send_from_directory
 from flask_wtf.csrf import generate_csrf
 from werkzeug.utils import secure_filename
 import os
@@ -69,6 +69,19 @@ def page_not_found(error):
     return render_template('404.html'), 404
 
 @app.route('/api/v1/movies', methods=['POST'])
+def get_movies():
+    movies = Movie.query.all()
+    movies_list = []
+    for movie in movies:
+        movie_data = {
+            'id': movie.id,
+            'title': movie.title,
+            'description': movie.description,
+            'poster': f'/api/v1/posters/{movie.poster_filename}'
+        }
+        movies_list.append(movie_data)
+    return jsonify({'movies': movies_list})
+@app.route('/api/v1/movies', methods=['POST'])
 def movies():
     if request.method == 'POST':
         form = MovieForm()
@@ -101,5 +114,8 @@ def movies():
 def get_csrf(): 
     return jsonify({'csrf_token': generate_csrf()}) 
 
+@app.route('/api/v1/posters/<filename>')
+def get_poster(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 app.run(debug=True)

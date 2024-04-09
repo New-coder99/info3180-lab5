@@ -1,6 +1,6 @@
 <template>
   <div>
-    <form @submit.prevent="saveMovie">
+    <form id="movieForm" @submit.prevent="saveMovie">
       <div class="form-group mb-3">
         <label for="title" class="form-label">Movie Title</label>
         <input type="text" v-model="formData.title" name="title" class="form-control" />
@@ -21,9 +21,12 @@
         <button type="submit" class="btn btn-primary">Submit</button>
       </div>
     </form>
+    <!-- Display success message if successMessage is not empty -->
+    <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
+    <!-- Display error message if errorMessage is not empty -->
+    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
   </div>
 </template>
-
 
 <script setup>
   import { ref, onMounted } from 'vue';
@@ -36,12 +39,13 @@
   });
 
   let csrf_token = ref("");
+  let successMessage = ref(""); 
+  let errorMessage = ref(""); 
 
   function getCsrfToken() {
     fetch('/api/v1/csrf-token')
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         csrf_token.value = data.csrf_token;
       });
   }
@@ -62,13 +66,21 @@
       }
     })
     .then(function (response) {
+      if (response.ok) {
+        successMessage.value = "Movie saved successfully!";
+        errorMessage.value = ""; 
+      } else {
+        errorMessage.value = "Failed to save movie. Please try again.";
+        successMessage.value = "";
+      }
       return response.json();
     })
     .then(function (data) {
-      // Display a success message
-      console.log(data);
+      // Handle response data if needed
     })
     .catch(function (error) {
+      errorMessage.value = "An error occurred while saving the movie.";
+      successMessage.value = "";
       console.log(error);
     });
   }
